@@ -1,0 +1,43 @@
+#root {
+  height: 100%;
+}
+
+.app {
+  height: 100%;
+  padding: 1rem
+}
+
+.page {
+  height: 100%;
+  font-size: 1rem;
+  scroll-behavior: smooth;
+  background-attachment: fixed;
+}
+
+.page__body {
+  height: 100%;
+
+  font-family: "Open Sans";
+  color: black;
+  line-height: 1.5;
+
+  background-attachment: fixed;
+}
+
+.list {
+  list-style-type: none;
+}
+
+.list-item {
+  background-color: #eee;
+  margin: 1rem 0 1rem 0;
+  padding: 1rem;
+  border-radius: .5rem;
+  touch-action: none;
+}
+
+.item-id {
+  padding: 0 1rem 0 1rem; 
+  font-family: sans-serif;
+  font-size: .8rem;
+}

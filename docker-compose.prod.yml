@@ -1,0 +1,45 @@
+services:
+  node:
+    container_name: node-prod
+    image: "ponomarevandrey/assignment_node-prod:latest"
+    build:
+      context: ./node
+      dockerfile: Dockerfile
+      target: production
+    restart: always
+    #healthcheck:
+    #  test: "curl --fail http://localhost:8080"
+    #  interval: 5s
+    #  timeout: 5s
+    #  retries: 5
+    init: true
+    tty: true
+    volumes:
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    expose:
+      - "8080"
+    ports:
+      - "8080:8080"
+      # - "127.0.0.1:8080:8080"
+    env_file:
+      - ./node/.env
+
+  client:
+    container_name: client
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    restart: "always"
+    env_file:
+      - ./client/.prod.env
+    ports:
+      - 3000:3000
+    expose:
+      - 3000
+    volumes:
+      - ./client/:/client/
+
+networks:
+  testnet:
+    driver: bridge
