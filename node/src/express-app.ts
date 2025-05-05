@@ -10,13 +10,15 @@ import { apiRouter } from "./controllers/router";
 // Fake DB
 export const dbRecordsTotal = 1000000;
 export const db: UserRecord[] = [];
-for (let i = 0; i < dbRecordsTotal; i++) {
+for (let i = 0, username = 1; i < dbRecordsTotal; i++, username++) {
   db.push({
     id: i,
-    username: faker.internet.displayName(),
+    username: String(username),
     isChecked: false,
   });
 }
+//
+export const cachedSearchResult: { [key: string]: UserRecord[] } = {};
 
 const expressApp = express();
 expressApp.set("port", HTTP_PORT);

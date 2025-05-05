@@ -1,9 +1,6 @@
 import { Request, Response, NextFunction } from "express";
-import { db } from "../../express-app";
-import { UserRecord } from "../../types";
-import { moveInArray } from "../../urils/utils";
-
-let cachedSearchResult: UserRecord[] = [];
+import { db, cachedSearchResult } from "../../express-app";
+import { moveInArray } from "../../utils/utils";
 
 export function readUsers(
   req: Request<
@@ -29,12 +26,19 @@ export function readUsers(
     const query = req.query.q ? String(req.query.q) : null;
 
     if (query) {
-      cachedSearchResult = db.filter((user) => {
+      cachedSearchResult[`${query}`] = (
+        cachedSearchResult[`${query}`] || db
+      ).filter((user) => {
         return new RegExp(query, "i").test(user.username);
       });
 
-      const paginatedUsers = cachedSearchResult.slice(startIndex, endIndex);
-      const totalPages = Math.ceil(cachedSearchResult.length / pageSize);
+      const paginatedUsers = cachedSearchResult[`${query}`].slice(
+        startIndex,
+        endIndex,
+      );
+      const totalPages = Math.ceil(
+        cachedSearchResult[`${query}`].length / pageSize,
+      );
 
       res.json({
         results: paginatedUsers,
@@ -42,9 +46,10 @@ export function readUsers(
           currentPage: page,
           pageSize,
           totalPages,
-          totalItems: cachedSearchResult.length,
+          totalItems: cachedSearchResult[`${query}`].length,
         },
       });
+      console.log(page);
     } else {
       const paginatedUsers = db.slice(startIndex, endIndex);
       const totalPages = Math.ceil(db.length / pageSize);
@@ -67,7 +72,7 @@ export function readUsers(
 type PatchBody = {
   id?: number;
   isChecked?: boolean;
-  position?: { oldIndex: number; newIndex: number };
+  position?: { q?: string; oldIndex: number; newIndex: number };
 };
 export function patchUsers(
   req: Request<{}, {}, PatchBody>,
@@ -75,19 +80,37 @@ export function patchUsers(
   next: NextFunction,
 ) {
   try {
+    // Get search query to use it as a key to find in cached results
+    const query = req.body.position?.q ? String(req.body.position.q) : null;
+
+    //
     // Update position
+    //
     if (req.body.position) {
-      moveInArray(req.body.position.oldIndex, req.body.position.newIndex);
+      // update position in cached search results (in hash map)
+      if (query) {
+        moveInArray(
+          cachedSearchResult[`${query}`],
+          req.body.position.oldIndex,
+          req.body.position.newIndex,
+        );
+      } else {
+        // Update original db
+        moveInArray(db, req.body.position.oldIndex, req.body.position.newIndex);
+      }
     }
 
+    //
     // Update checkbox
+    //
     // TODO: refactor (add validation middleware)
-    if (req.body.id !== undefined && req.body.isChecked !== undefined) {
-      const objIndex = db.findIndex((user) => user.id === req.body.id);
-      db[objIndex].isChecked = req.body.isChecked;
+    if (req.body.id === undefined || req.body.isChecked === undefined) {
+      res.status(400).end();
+      return;
     }
 
-    console.log(db);
+    const objIndex = db.findIndex((user) => user.id === req.body.id);
+    db[objIndex].isChecked = req.body.isChecked;
 
     res.status(204).end();
   } catch (err) {
