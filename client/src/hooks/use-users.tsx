@@ -1,7 +1,7 @@
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { API_ROOT_URL } from "../config/env";
 
-export function useUsers(searchInput: string) {
+export function useGetUsers(searchInput: string) {
   return useInfiniteQuery({
     queryKey: ["users", searchInput],
 

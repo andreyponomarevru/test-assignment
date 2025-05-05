@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { useInView } from "react-intersection-observer";
-import { useMutation } from "@tanstack/react-query";
 import {
   DndContext,
   closestCenter,
@@ -17,28 +16,17 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import { useUsers } from "../hooks/use-users";
+import { useGetUsers } from "../hooks/use-users";
 import { ListItem } from "./list-item";
-import { type User } from "../types";
-import { API_ROOT_URL } from "../config/env";
+import { PatchUsersBody, type User } from "../types";
+import { usePatchUsers } from "../hooks/use-users-mutation";
 
 interface Props {
   searchInput: string;
 }
 
 export function List(props: Props) {
-  const mutation = useMutation({
-    mutationFn: (body: { oldIndex: number; newIndex: number }) => {
-      return fetch(`${API_ROOT_URL}/users`, {
-        headers: {
-          accept: "application/json",
-          "content-type": "application/json",
-        },
-        method: "PATCH",
-        body: JSON.stringify({ position: body }),
-      });
-    },
-  });
+  const mutation = usePatchUsers();
 
   //
   // Pagination + Infinite scroll feature
@@ -53,7 +41,7 @@ export function List(props: Props) {
     hasNextPage,
     isFetchingNextPage,
     status,
-  } = useUsers(props.searchInput);
+  } = useGetUsers(props.searchInput);
   // Automatically fetch next page when user scrolls to bottom
   useEffect(() => {
     if (inView && hasNextPage) {
@@ -77,10 +65,7 @@ export function List(props: Props) {
     }),
     useSensor(TouchSensor, {
       // Press delay of 250ms, with tolerance of 5px of movement
-      activationConstraint: {
-        delay: 250,
-        tolerance: 5,
-      },
+      activationConstraint: { delay: 250, tolerance: 5 },
     }),
   );
 
@@ -94,10 +79,14 @@ export function List(props: Props) {
         const oldIndex = items.findIndex((o) => o.id === event.active.id);
         const newIndex = items.findIndex((o) => o.id === event.over?.id);
 
-        // Don't update position in DB if the list is *search results*
-        if (props.searchInput.trim().length === 0) {
-          mutation.mutate({ oldIndex, newIndex });
+        let reqBody: PatchUsersBody = { oldIndex, newIndex };
+
+        // if the displayed list is *search results*, update positions in chached search results array on backend
+        if (props.searchInput.length > 0) {
+          reqBody = { ...reqBody, q: props.searchInput };
         }
+
+        mutation.mutate(reqBody);
 
         return arrayMove(items, oldIndex, newIndex);
       });

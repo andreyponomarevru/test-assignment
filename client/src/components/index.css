@@ -26,6 +26,7 @@
 
 .list {
   list-style-type: none;
+  padding: 0 2rem 0 0;
 }
 
 .list-item {
@@ -34,6 +35,10 @@
   padding: 1rem;
   border-radius: .5rem;
   touch-action: none;
+}
+
+.list-item:hover {
+  background-color: #e6e6e6;
 }
 
 .item-id {

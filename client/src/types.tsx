@@ -3,3 +3,5 @@ export type User = {
   username: string;
   isChecked: boolean;
 };
+
+export type PatchUsersBody = { oldIndex: number; newIndex: number; q?: string };
