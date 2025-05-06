@@ -11,7 +11,7 @@ export function usePatchUsers() {
           "content-type": "application/json",
         },
         method: "PATCH",
-        body: JSON.stringify({ position: body }),
+        body: JSON.stringify(body),
       });
     },
   });

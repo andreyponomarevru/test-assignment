@@ -4,4 +4,8 @@ export type User = {
   isChecked: boolean;
 };
 
-export type PatchUsersBody = { oldIndex: number; newIndex: number; q?: string };
+export type PatchUsersBody =
+  | {
+      indexPosition: { oldIndex: number; newIndex: number };
+    }
+  | { idPosition: { itemId: number; moveAfterId: number } };

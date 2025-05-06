@@ -79,11 +79,20 @@ export function List(props: Props) {
         const oldIndex = items.findIndex((o) => o.id === event.active.id);
         const newIndex = items.findIndex((o) => o.id === event.over?.id);
 
-        let reqBody: PatchUsersBody = { oldIndex, newIndex };
+        let reqBody: PatchUsersBody;
 
-        // if the displayed list is *search results*, update positions in chached search results array on backend
+        if (!event.over) return items;
+
+        // if the displayed list is *search results*
         if (props.searchInput.length > 0) {
-          reqBody = { ...reqBody, q: props.searchInput };
+          reqBody = {
+            idPosition: {
+              itemId: Number(event.active.id),
+              moveAfterId: Number(event.over.id),
+            },
+          };
+        } else {
+          reqBody = { indexPosition: { oldIndex, newIndex } };
         }
 
         mutation.mutate(reqBody);

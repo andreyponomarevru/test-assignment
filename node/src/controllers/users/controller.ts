@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { db, cachedSearchResult } from "../../express-app";
-import { moveInArray } from "../../utils/utils";
+import { moveInArray, moveInArrayById } from "../../utils/utils";
 
 export function readUsers(
   req: Request<
@@ -72,7 +72,8 @@ export function readUsers(
 type PatchBody = {
   id?: number;
   isChecked?: boolean;
-  position?: { q?: string; oldIndex: number; newIndex: number };
+  indexPosition?: { oldIndex: number; newIndex: number };
+  idPosition?: { itemId: number; moveAfterId: number };
 };
 export function patchUsers(
   req: Request<{}, {}, PatchBody>,
@@ -80,39 +81,39 @@ export function patchUsers(
   next: NextFunction,
 ) {
   try {
-    // Get search query to use it as a key to find in cached results
-    const query = req.body.position?.q ? String(req.body.position.q) : null;
+    // TODO: refactor (replace 'if' with the 'switch' statement/add validation middleware)
 
     //
     // Update position
     //
-    if (req.body.position) {
-      // update position in cached search results (in hash map)
-      if (query) {
-        moveInArray(
-          cachedSearchResult[`${query}`],
-          req.body.position.oldIndex,
-          req.body.position.newIndex,
-        );
-      } else {
-        // Update original db
-        moveInArray(db, req.body.position.oldIndex, req.body.position.newIndex);
-      }
+    if (req.body.indexPosition) {
+      moveInArray(
+        req.body.indexPosition.oldIndex,
+        req.body.indexPosition.newIndex,
+      );
+      res.status(204).end;
+      return;
+    }
+
+    if (req.body.idPosition) {
+      moveInArrayById(
+        req.body.idPosition.itemId,
+        req.body.idPosition.moveAfterId,
+      );
+      res.status(204).end;
+      return;
     }
 
     //
     // Update checkbox
     //
-    // TODO: refactor (add validation middleware)
-    if (req.body.id === undefined || req.body.isChecked === undefined) {
-      res.status(400).end();
+
+    if (req.body.id && req.body.isChecked) {
+      const objIndex = db.findIndex((user) => user.id === req.body.id);
+      db[objIndex].isChecked = req.body.isChecked;
+      res.status(204).end();
       return;
     }
-
-    const objIndex = db.findIndex((user) => user.id === req.body.id);
-    db[objIndex].isChecked = req.body.isChecked;
-
-    res.status(204).end();
   } catch (err) {
     next(err);
   }
