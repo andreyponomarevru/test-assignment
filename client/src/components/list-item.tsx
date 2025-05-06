@@ -53,7 +53,7 @@ export function ListItem(props: Props) {
             handleChange(props.user.id);
           }}
         ></input>
-        <span className="item-id">{props.user.id}</span>
+        <span className="item-id">(ID: {props.user.id})</span>
         {props.user.username}
         {mutation.isPending ? (
           "Saving..."
