@@ -108,7 +108,10 @@ export function patchUsers(
     // Update checkbox
     //
 
-    if (req.body.id && req.body.isChecked) {
+    const hasId = req.body.hasOwnProperty("id");
+    const hasIsChecked = req.body.hasOwnProperty("isChecked");
+
+    if (hasId && hasIsChecked && req.body.isChecked !== undefined) {
       const objIndex = db.findIndex((user) => user.id === req.body.id);
       db[objIndex].isChecked = req.body.isChecked;
       res.status(204).end();
